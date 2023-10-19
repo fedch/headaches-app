@@ -1,9 +1,10 @@
 // Represents a single headache incident.
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-class Headache {
+class Headache implements Serializable {
     private final LocalDateTime startTime;
     private LocalDateTime endTime;
     private final int severity;

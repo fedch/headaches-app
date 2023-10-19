@@ -1,9 +1,10 @@
 // Represents a user.
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-class User {
+class User implements Serializable {
     private final String name;
     private final List<Headache> headaches;
 

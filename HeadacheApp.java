@@ -1,12 +1,15 @@
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.io.Serializable;
 
 public class HeadacheApp {
     private static User user = null;
 
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
+
+        user = DataStorage.loadUserData(); // Load the user data at startup
 
         while (true) {
             if (user == null) {
@@ -17,15 +20,46 @@ public class HeadacheApp {
                 System.out.println("Hello, " + user.getName() + "!");
                 System.out.println("You've been headache-free for " + calculateDaysWithoutHeadache() + " days.");
 
-                System.out.println("Did you have a headache today? (yes/no)");
-                String response = scanner.nextLine();
-                if (response.equalsIgnoreCase("yes")) {
-                    recordHeadache(scanner);
+                if (hasActiveHeadache()) {
+                    System.out.println("Your ongoing headache started on " + getLastHeadache().getStartTime() + " and has been active for " + Duration.between(getLastHeadache().getStartTime(), LocalDateTime.now()).toMinutes() + " minutes.");
+                    System.out.println("Has it ended yet? (yes/no)");
+                    String ended = scanner.nextLine();
+
+                    if (ended.equalsIgnoreCase("yes")) {
+                        System.out.println("Enter the end time of headache (format: yyyy-MM-dd HH:mm):");
+                        String endTimeStr = scanner.nextLine();
+                        LocalDateTime endTime = LocalDateTime.parse(endTimeStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"));
+                        getLastHeadache().endHeadache(endTime);
+                        DataStorage.saveUserData(user);
+                    }
                 } else {
-                    viewHeadacheHistory();
+                    System.out.println("Did you have a headache today? (yes/no)");
+                    String response = scanner.nextLine();
+                    if (response.equalsIgnoreCase("exit")) {
+                        DataStorage.saveUserData(user);
+                        System.out.println("Goodbye!");
+                        break;
+                    }
+                    if (response.equalsIgnoreCase("yes")) {
+                        recordHeadache(scanner);
+                        System.out.println("Feel better soon!");
+                        DataStorage.saveUserData(user);
+                        break;
+                    } else {
+                        viewHeadacheHistory();
+                    }
                 }
             }
         }
+    }
+
+    private static boolean hasActiveHeadache() {
+        if (user.getHeadaches().isEmpty()) return false;
+        return getLastHeadache().getEndTime() == null;
+    }
+
+    private static Headache getLastHeadache() {
+        return user.getHeadaches().get(user.getHeadaches().size() - 1);
     }
 
     private static void recordHeadache(Scanner scanner) {
